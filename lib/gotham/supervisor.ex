@@ -13,7 +13,8 @@ defmodule Gotham.Supervisor do
     |> Enum.each(fn {account_name, [file_path: file_path]} ->
       with {:ok, content} <- file_path |> File.read() do
         spec = {Alfred, account_name: account_name, keyfile_content: content}
-        DynamicSupervisor.start_child(__MODULE__, spec)
+
+        DynamicSupervisor.start_child(__MODULE__, spec) |> IO.inspect()
       end
     end)
   end

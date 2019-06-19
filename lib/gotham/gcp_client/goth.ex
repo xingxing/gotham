@@ -1,8 +1,14 @@
 defmodule Gotham.GCPClient.Goth do
-  alias Gotham.Alfred
+  alias Gotham.{ProfileKeeper, Token}
 
   def get_access_token(scope) do
-    with {:ok, profile} <- Alfred.get_profile(), do: get_access_token(scope, profile)
+    with {:ok, profile} <- ProfileKeeper.get_profile(),
+         {:ok, %{body: body}} <- get_access_token(scope, profile),
+         {:ok, json} <-
+           body
+           |> Jason.decode(keys: :atoms) do
+      {:ok, json |> Token.from_response_json(scope)}
+    end
   end
 
   def get_access_token(scope, %{token_source: :oauth_jwt} = profile) do

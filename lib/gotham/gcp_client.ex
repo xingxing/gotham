@@ -1,6 +1,6 @@
 defmodule Gotham.GCPClient do
   @type scope :: binary
-  @type token :: binary
+  @type token :: Gotham.Token.t()
 
   alias Gotham.GCPClient.Goth
 
