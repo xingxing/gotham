@@ -1,7 +1,7 @@
 defmodule GothamTest do
   use ExUnit.Case
 
-  describe "get_account_name/1" do
+  describe("get_account_name/1") do
     test "when account name has been setted" do
       Process.put(Gotham, :account_a)
       assert Gotham.get_account_name() == :account_a
@@ -23,8 +23,8 @@ defmodule GothamTest do
 
   describe "put_account_name/1" do
     test "when account name is an atom" do
-      Gotham.put_account_name(:account_a)
-      assert Process.get(Gotham) == :account_a
+      assert Gotham.put_account_name(:account1)
+      assert Process.get(Gotham) == :account1
     end
 
     test "when account name is not an atom" do

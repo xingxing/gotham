@@ -1,1 +1,5 @@
 ExUnit.start()
+Application.ensure_all_started(:gotham)
+Application.ensure_all_started(:mox)
+Gotham.Application.start(nil, nil)
+Mox.defmock(Gotham.GCPClient.Mox, for: Gotham.GCPClient)

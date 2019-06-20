@@ -64,7 +64,7 @@ defmodule Gotham.TokenStore do
   end
 
   def handle_call({:store, token}, _from, state) do
-    new_state = put_token(state, token)
+    {:ok, new_state} = put_token(state, token)
     {:reply, new_state, new_state}
   end
 
@@ -105,7 +105,7 @@ defmodule Gotham.TokenStore do
 
   defp task_supervisor_name(account_name, scope) do
     scope_suffix = scope |> String.split("/") |> List.last()
-    account_name = Gotham.get_account_name() |> IO.inspect()
+    account_name = Gotham.get_account_name()
     :"gotham_token_store_for_#{account_name}_#{scope_suffix}"
   end
 end
