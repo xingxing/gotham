@@ -25,5 +25,5 @@ defmodule Gotham.Alfred do
     Supervisor.init(children, strategy: :rest_for_one)
   end
 
-  defp supervisor_name(account_name), do: :"gotham_alfred_for_#{account_name}"
+  def supervisor_name(account_name), do: :"gotham_alfred_for_#{account_name}"
 end

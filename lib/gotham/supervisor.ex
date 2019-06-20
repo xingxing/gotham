@@ -14,7 +14,7 @@ defmodule Gotham.Supervisor do
       with {:ok, content} <- file_path |> File.read() do
         spec = {Alfred, account_name: account_name, keyfile_content: content}
 
-        DynamicSupervisor.start_child(__MODULE__, spec) |> IO.inspect()
+        DynamicSupervisor.start_child(__MODULE__, spec)
       end
     end)
   end

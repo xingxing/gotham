@@ -1,4 +1,4 @@
-defmodule Gotham.GCPClient.Goth do
+defmodule Gotham.GCPClient.HTTPoison do
   alias Gotham.{ProfileKeeper, Token}
 
   def get_access_token(scope) do
@@ -6,8 +6,12 @@ defmodule Gotham.GCPClient.Goth do
          {:ok, %{body: body}} <- get_access_token(scope, profile),
          {:ok, json} <-
            body
-           |> Jason.decode(keys: :atoms) do
+           |> Jason.decode(keys: :atoms),
+         %{access_token: _, expires_in: _, token_type: _} <- json do
       {:ok, json |> Token.from_response_json(scope)}
+    else
+      %{error: error, error_description: error_description} = reason ->
+        {:error, reason}
     end
   end
 
@@ -42,15 +46,4 @@ defmodule Gotham.GCPClient.Goth do
     }
     |> Joken.Signer.sign(signer)
   end
-
-  # defp handle_response(resp, opts)
-
-  # defp handle_response({:ok, %{body: body, status_code: code}}, {account, scope}, sub)
-  #      when code in 200..299,
-  #      do: {:ok, Token.from_response_json({account, scope}, sub, body)}
-
-  # defp handle_response({:ok, %{body: body}}, _scope, _sub),
-  #   do: {:error, "Could not retrieve token, response: #{body}"}
-
-  # defp handle_response(other, _scope, _sub), do: other
 end

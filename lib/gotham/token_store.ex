@@ -13,7 +13,11 @@ defmodule Gotham.TokenStore do
   # APIs
 
   def start_link(account_name: account_name, keyfile_content: _) do
-    GenServer.start_link(__MODULE__, %{}, name: worker_name(account_name))
+    GenServer.start_link(
+      __MODULE__,
+      %{account_name: account_name},
+      name: worker_name(account_name)
+    )
   end
 
   def for_scope(scope) do
@@ -25,24 +29,33 @@ defmodule Gotham.TokenStore do
   end
 
   def request(scope) do
-    scope
-    |> GCPClient.get_access_token()
+    scope |> GCPClient.get_access_token()
   end
 
-  def store(token) do
-    {:ok, %{}}
+  def store(%Token{account_name: account_name, scope: scope} = token) do
+    account_name
+    |> worker_name
+    |> GenServer.call({:store, token})
+  end
+
+  def refresh(%{account_name: account_name} = original_token) do
+    account_name
+    |> worker_name
+    |> GenServer.call({:refresh, original_token})
   end
 
   # Callbacks
 
   def init(state) do
+    Gotham.put_account_name(state.account_name)
     {:ok, state}
   end
 
   def handle_call({:fetch, scope}, _from, state) do
-    with :error <- Map.fetch(state, :scope),
+    with :error <- Map.fetch(state, scope),
          {:ok, token} <- GCPClient.get_access_token(scope),
-         {:ok, new_state} <- store(token) do
+         {:ok, new_state} <- put_token(state, token),
+         {:ok, _pid} <- queue_for_refresh(token) do
       {:reply, token, new_state}
     else
       token ->
@@ -50,77 +63,49 @@ defmodule Gotham.TokenStore do
     end
   end
 
-  # @doc ~S"""
-  # Store a token in the `TokenStore`. Upon storage, Goth will queue the token
-  # to be refreshed ten seconds before its expiration.
-  # """
-  # @spec store(Token.t()) :: pid
-  # def store(%Token{} = token), do: store(token.scope, token.sub, token)
+  def handle_call({:store, token}, _from, state) do
+    new_state = put_token(state, token)
+    {:reply, new_state, new_state}
+  end
 
-  # @spec store({String.t() | atom(), String.t()} | String.t(), Token.t()) :: pid()
-  # def store(scopes, %Token{} = token) when is_binary(scopes),
-  #   do: store({:default, scopes}, token.sub, token)
+  def handle_call({:refresh, %{scope: scope}}, _from, state) do
+    new_token = scope |> GCPClient.get_access_token()
+    {:ok, new_state} = state |> put_token(new_token)
+    {:reply, new_token, new_state}
+  end
 
-  # def store({account, scopes}, %Token{} = token) when is_binary(scopes),
-  #   do: store({account, scopes}, token.sub, token)
+  defp put_token(state, token) do
+    {:ok, Map.put(state, token.scope, token)}
+  end
 
-  # @spec store(String.t(), String.t(), Token.t()) :: pid
-  # def store(scopes, sub, %Token{} = token) when is_binary(scopes),
-  #   do: store({:default, scopes}, sub, token)
+  defp queue_for_refresh(%{expire_at: expire_at, account_name: acount_name, scope: scope} = token) do
+    {:ok, pid} = Task.Supervisor.start_link(name: task_supervisor_name(acount_name, scope))
 
-  # @spec store({String.t() | atom(), String.t()}, String.t() | nil, Token.t()) :: pid
-  # def store({account, scopes}, sub, %Token{} = token) when is_binary(scopes) do
-  #   GenServer.call(__MODULE__, {:store, {account, scopes, sub}, token})
-  # end
+    Task.Supervisor.async(pid, fn ->
+      refresh_loop(token)
+    end)
 
-  # @doc ~S"""
-  # Retrieve a token from the `TokenStore`.
+    {:ok, pid}
+  end
 
-  #     token = %Goth.Token{type:    "Bearer",
-  #                         token:   "123",
-  #                         scope:   "scope",
-  #                         expires: :os.system_time(:seconds) + 3600}
-  #     Goth.TokenStore.store(token)
-  #     {:ok, ^token} = Goth.TokenStore.find(token.scope)
-  # """
-  # @spec find({String.t() | atom(), String.t()} | String.t(), String.t() | nil) ::
-  #         {:ok, Token.t()} | :error
-  # def find(info, sub \\ nil)
+  defp refresh_loop(%{expire_at: expire_at} = token) do
+    diff = expire_at - :os.system_time(:seconds)
 
-  # def find(scope, sub) when is_binary(scope), do: find({:default, scope}, sub)
-
-  # def find({account, scope}, sub) do
-  #   GenServer.call(__MODULE__, {:find, {account, scope, sub}})
-  # end
-
-  # # when we store a token, we should refresh it later
-  # def handle_call({:store, {account, scope, sub}, token}, _from, state) do
-  #   # this is a race condition when inserting an expired (or about to expire) token...
-  #   pid_or_timer = Token.queue_for_refresh(token)
-  #   {:reply, pid_or_timer, Map.put(state, {account, scope, sub}, token)}
-  # end
-
-  # def handle_call({:find, {account, scope, sub}}, _from, state) do
-  #   state
-  #   |> Map.fetch({account, scope, sub})
-  #   |> filter_expired(:os.system_time(:seconds))
-  #   |> reply(state, {account, scope, sub})
-  # end
-
-  # defp filter_expired(:error, _), do: :error
-
-  # defp filter_expired({:ok, %Goth.Token{expires: expires}}, system_time)
-  #      when expires < system_time,
-  #      do: :error
-
-  # defp filter_expired(value, _), do: value
-
-  # defp reply(:error, state, {account, scope, sub}),
-  #   do: {:reply, :error, Map.delete(state, {account, scope, sub})}
-
-  # defp reply(value, state, _key), do: {:reply, value, state}
+    if diff <= 10 do
+      __MODULE__.refresh(token)
+    else
+      Process.sleep(diff * 1_000)
+      refresh_loop(token)
+    end
+  end
 
   defp worker_name(account_name) do
     :"gotham_token_store_for_#{account_name}"
+  end
+
+  defp task_supervisor_name(account_name, scope) do
+    scope_suffix = scope |> String.split("/") |> List.last()
+    account_name = Gotham.get_account_name() |> IO.inspect()
+    :"gotham_token_store_for_#{account_name}_#{scope_suffix}"
   end
 end
