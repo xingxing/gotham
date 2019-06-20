@@ -1,6 +1,6 @@
 # Gotham
 
-**TODO: Add description**
+[![CircleCI](https://circleci.com/gh/xingxing/gotham/tree/master.svg?style=svg)](https://circleci.com/gh/xingxing/gotham/tree/master)
 
 ## Installation
 
