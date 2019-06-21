@@ -6,9 +6,11 @@ defmodule Gotham.MixProject do
       app: :gotham,
       version: "0.1.0",
       elixir: "~> 1.6",
+      description: description(),
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      package: package()
     ]
   end
 
@@ -28,7 +30,22 @@ defmodule Gotham.MixProject do
       {:jason, "~> 1.1"},
       {:joken, "~> 2.1"},
       {:httpoison, "~> 1.5"},
-      {:mox, "~> 0.5.1"}
+      {:mox, "~> 0.5.1"},
+      {:ex_doc, "~> 0.18.0", only: :dev}
+    ]
+  end
+
+  defp description() do
+    "Google Cloud Platform authentication, supports multiple GCP service accounts"
+  end
+
+  defp package() do
+    [
+      # These are the default files included in the package
+      files: ~w(lib  mix.exs README*  LICENSE*),
+      maintainers: ["Wade Ying Xing"],
+      licenses: ["Apache-2.0"],
+      links: %{"GitHub" => "https://github.com/xingxing/gotham"}
     ]
   end
 end

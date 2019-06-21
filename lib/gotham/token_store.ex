@@ -1,7 +1,7 @@
 defmodule Gotham.TokenStore do
   @moduledoc """
-  The `Goth.TokenStore` is a simple `GenServer` that manages storage and retrieval
-  of tokens `Goth.Token`. When adding to the token store, it also queues tokens
+  The `Gotham.TokenStore` is a simple `GenServer` that manages storage and retrieval
+  of tokens `Gotham.Token`. When adding to the token store, it also queues tokens
   for a refresh before they expire: ten seconds before the token is set to expire,
   the `TokenStore` will call the API to get a new token and replace the expired
   token in the store.
@@ -56,7 +56,7 @@ defmodule Gotham.TokenStore do
          {:ok, token} <- GCPClient.get_access_token(scope),
          {:ok, new_state} <- put_token(state, token),
          {:ok, _pid} <- queue_for_refresh(token) do
-      {:reply, token, new_state}
+      {:reply, {:ok, token}, new_state}
     else
       token ->
         {:reply, token, state}

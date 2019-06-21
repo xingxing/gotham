@@ -24,13 +24,15 @@ defmodule Gotham.TokenStoreTest do
          }}
       end)
 
-      assert TokenStore.for_scope("pubsub") == %Token{
-               access_token: "token",
-               account_name: :account1,
-               expire_at: @expire_at,
-               scope: "pubsub",
-               token_type: nil
-             }
+      assert TokenStore.for_scope("pubsub") ==
+               {:ok,
+                %Token{
+                  access_token: "token",
+                  account_name: :account1,
+                  expire_at: @expire_at,
+                  scope: "pubsub",
+                  token_type: nil
+                }}
     end
 
     test "when token for a specific scope has been stored" do
@@ -39,7 +41,7 @@ defmodule Gotham.TokenStoreTest do
         account_name: :account1,
         expire_at: 1,
         scope: "cloudsql",
-        token_type: "Bare"
+        token_type: nil
       }
 
       TokenStore.store(token)

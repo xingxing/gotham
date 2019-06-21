@@ -8,7 +8,7 @@ defmodule Gotham.GCPClient.HTTPoison do
            body
            |> Jason.decode(keys: :atoms),
          %{access_token: _, expires_in: _, token_type: _} <- json do
-      {:ok, json |> Token.from_response_json(scope)}
+      {:ok, json |> Token.from_response_json(scope, profile.project_id)}
     else
       %{error: error, error_description: error_description} = reason ->
         {:error, reason}
