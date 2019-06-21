@@ -4,7 +4,7 @@ defmodule Gotham.MixProject do
   def project do
     [
       app: :gotham,
-      version: get_version(),
+      version: "0.1.1",
       elixir: "~> 1.6",
       description: description(),
       elixirc_paths: elixirc_paths(Mix.env()),
