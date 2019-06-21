@@ -4,7 +4,7 @@ defmodule Gotham.MixProject do
   def project do
     [
       app: :gotham,
-      version: "0.1.0",
+      version: get_version(),
       elixir: "~> 1.6",
       description: description(),
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -47,5 +47,15 @@ defmodule Gotham.MixProject do
       licenses: ["Apache-2.0"],
       links: %{"GitHub" => "https://github.com/xingxing/gotham"}
     ]
+  end
+
+  defp get_version(init_version \\ "0.1.0") do
+    case System.cmd("git", ["describe", "--abbrev=0"]) do
+      {"", _} ->
+        init_version
+
+      {version, _} ->
+        version
+    end
   end
 end

@@ -2,7 +2,7 @@ defmodule Gotham do
   @moduledoc """
   Documentation for Gotham.
   """
-  alias Gotham.TokenStore
+  alias Gotham.{TokenStore, ProfileKeeper}
 
   @type scope :: binary
   @type token :: Gotham.Token.t()
@@ -50,4 +50,7 @@ defmodule Gotham do
 
   @spec for_scope(scope) :: {:ok, token} | {:error, any()}
   defdelegate for_scope(scope), to: TokenStore
+
+  @spec get_profile() :: {:ok, Map.t()}
+  defdelegate get_profile(), to: ProfileKeeper
 end
