@@ -30,7 +30,7 @@ defmodule Gotham.MixProject do
       {:jason, "~> 1.1"},
       {:joken, "~> 2.1"},
       {:httpoison, "~> 1.5"},
-      {:mox, "~> 0.5.1"},
+      {:mox, "~> 0.5.1", only: :test},
       {:ex_doc, "~> 0.18.0", only: :dev}
     ]
   end
