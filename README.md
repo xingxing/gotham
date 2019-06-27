@@ -1,12 +1,18 @@
+
+<p align="center">
+  <img width="230" height="230" src="https://user-images.githubusercontent.com/120734/60244733-9a01ef80-98ed-11e9-91cd-54e0b864f82f.png" alt="gotham city">
+</p>
+
+
 [![CircleCI](https://circleci.com/gh/xingxing/gotham/tree/master.svg?style=svg)](https://circleci.com/gh/xingxing/gotham/tree/master)
 
 # Gotham
 
 *Support multiple GCP service account*
 
-Inspired by [Goth](https://github.com/peburrows/goth)
-
 Google + Auth + Batman = Gotham
+
+[](https://user-images.githubusercontent.com/120734/60244733-9a01ef80-98ed-11e9-91cd-54e0b864f82f.png)
 
 ## Installation
 
