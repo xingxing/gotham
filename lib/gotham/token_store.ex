@@ -75,6 +75,10 @@ defmodule Gotham.TokenStore do
     end
   end
 
+  def handle_info(_, state) do
+    {:noreply, state}
+  end
+
   defp put_token(state, token) do
     {:ok, Map.put(state, token.scope, token)}
   end
@@ -91,11 +95,12 @@ defmodule Gotham.TokenStore do
     diff = expire_at - :os.system_time(:seconds)
 
     if diff <= 10 do
-      __MODULE__.refresh(token)
+      token = __MODULE__.refresh(token)
     else
-      Process.sleep(diff * 1_000)
-      refresh_loop(token)
+      Process.sleep((diff - 10) * 1_000)
     end
+
+    refresh_loop(token)
   end
 
   defp worker_name(account_name) do
