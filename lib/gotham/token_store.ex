@@ -69,9 +69,10 @@ defmodule Gotham.TokenStore do
   end
 
   def handle_call({:refresh, %{scope: scope}}, _from, state) do
-    new_token = scope |> GCPClient.get_access_token()
-    {:ok, new_state} = state |> put_token(new_token)
-    {:reply, new_token, new_state}
+    with {:ok, new_token} <- scope |> GCPClient.get_access_token() do
+      {:ok, new_state} = state |> put_token(new_token)
+      {:reply, new_token, new_state}
+    end
   end
 
   defp put_token(state, token) do
