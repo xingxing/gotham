@@ -80,13 +80,11 @@ defmodule Gotham.TokenStore do
   end
 
   defp queue_for_refresh(%{expire_at: expire_at, account_name: acount_name, scope: scope} = token) do
-    {:ok, pid} = Task.Supervisor.start_link(name: task_supervisor_name(acount_name, scope))
-
-    Task.Supervisor.async(pid, fn ->
+    Task.async(fn ->
       refresh_loop(token)
     end)
 
-    {:ok, pid}
+    {:ok, nil}
   end
 
   defp refresh_loop(%{expire_at: expire_at} = token) do
