@@ -30,8 +30,18 @@ config :gotham,
   accounts: [
     {:account1, file_path: "path/to/google/json/creds.json"},
     {:account2, file_path: "path/to/google/json/creds.json"}
-  ]
+    {:account3, env_var: "GOOGLE_APPLICATION_CREDENTIALS"},
+    {:account4, content: """
+      {
+        "type": "service_account",
+        "project_id": "fake_project",
+        "private_key_id": "46900d88664ebba4eb08f745b365254e2b0625ab",
+        ...
+      }
+    """
+    }
 ```
+
 
 ## Usage
 
