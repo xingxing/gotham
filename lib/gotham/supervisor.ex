@@ -10,13 +10,23 @@ defmodule Gotham.Supervisor do
   def load_profiles() do
     :gotham
     |> Application.get_env(:accounts, [])
-    |> Enum.each(fn {account_name, [file_path: file_path]} ->
-      with {:ok, content} <- file_path |> File.read() do
-        spec = {Alfred, account_name: account_name, keyfile_content: content}
-
-        DynamicSupervisor.start_child(__MODULE__, spec)
-      end
+    |> Enum.each(fn {account_name, opts} ->
+      content = load_credentials(opts)
+      spec = {Alfred, account_name: account_name, keyfile_content: content}
+      DynamicSupervisor.start_child(__MODULE__, spec)
     end)
+  end
+
+  defp load_credentials(file_path: file_path) do
+    File.read!(file_path)
+  end
+
+  defp load_credentials(content: content) do
+    content
+  end
+
+  defp load_credentials(env_var: env_var) do
+    System.get_env(env_var)
   end
 
   @impl true
